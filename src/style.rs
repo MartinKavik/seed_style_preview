@@ -896,7 +896,6 @@ fn add_global_init_css_to_head(
     css: &str,
     short_hash: &str,
     style: &Style,
-    global_classname: &str,
     selector: &str,
 ) {
     let head_elem = document().get_elements_by_tag_name("head").item(0).unwrap();
@@ -913,8 +912,7 @@ fn add_global_init_css_to_head(
         .map(|c| {
             if let Combinator::Pre(c) = c {
                 format!(
-                    ".{}{}{}{}",
-                    global_classname,
+                    "{}{}{}",
                     selector,
                     c,
                     style.pseudo.render()
@@ -935,42 +933,37 @@ fn add_global_init_css_to_head(
     } else {
         match (&style.media, &style.combinator) {
             (Some(media), Some(Combinator::Pre(c))) => format!(
-                "{}{{\n.{}{}{}{}{{\n{}}}}}\n",
+                "{}{{\n{}{}{}{{\n{}}}}}\n",
                 media,
-                global_classname,
                 selector,
                 c,
                 style.pseudo.render(),
                 css
             ),
             (Some(media), Some(Combinator::Post(c))) => format!(
-                "{}{{\n.{}{}{}{}{{\n{}}}}}\n",
+                "{}{{\n{}{}{}{{\n{}}}}}\n",
                 media,
-                global_classname,
                 c,
                 selector,
                 style.pseudo.render(),
                 css
             ),
             (Some(media), None) => format!(
-                "{}{{\n.{}{}{}{{\n{}}}}}\n",
+                "{}{{\n{}{}{{\n{}}}}}\n",
                 media,
-                global_classname,
                 selector,
                 style.pseudo.render(),
                 css
             ),
             (None, Some(Combinator::Pre(c))) => format!(
-                "\n.{}{}{}{}{{\n{}}}\n",
-                global_classname,
+                "\n{}{}{}{{\n{}}}\n",
                 selector,
                 c,
                 style.pseudo.render(),
                 css
             ),
             (None, Some(Combinator::Post(c))) => format!(
-                "\n.{}{}{}{}{{\n{}}}\n",
-                global_classname,
+                "\n{}{}{}{{\n{}}}\n",
                 c,
                 selector,
                 style.pseudo.render(),
@@ -978,8 +971,7 @@ fn add_global_init_css_to_head(
             ),
 
             (None, None) => format!(
-                "\n.{}{}{}{{\n{}}}\n",
-                global_classname,
+                "\n{}{}{{\n{}}}\n",
                 selector,
                 style.pseudo.render(),
                 css
@@ -1077,8 +1069,8 @@ fn add_global_init_css_to_head(
     for (media_breakpoint, rule_vec) in &style.media_rules {
         let mut media_string = String::new();
         media_string.push_str(&format!(
-            "{}{{\n.{}{}{{\n",
-            media_breakpoint, global_classname, selector
+            "{}{{\n{}{{\n",
+            media_breakpoint, selector
         ));
 
         for rule in rule_vec {
@@ -1619,28 +1611,12 @@ impl GlobalStyle {
     }
 
     pub fn style(mut self, mut selector: &str, style: Style) -> GlobalStyle {
-        if selector == "html" {
-            selector = ""
-        }
-
         self.styles.push((selector.to_string(), style));
         self
     }
 
     pub fn activate_init_styles(&self) {
         do_once(|| {
-            let html_root_class = "seed-init-style ".to_string();
-
-            if let Some(html_root_elem) = document().get_elements_by_tag_name("html").item(0) {
-                if let Some(mut class_name) = html_root_elem.get_attribute("class") {
-                    class_name.push_str(" ");
-                    class_name.push_str(&html_root_class);
-                    let _ = html_root_elem.set_attribute("class", &class_name);
-                } else {
-                    let _ = html_root_elem.set_attribute("class", &format!(" {}", html_root_class));
-                }
-            }
-
             for (selector, style) in &self.styles {
                 let rendered_css = style.render();
 
@@ -1648,7 +1624,6 @@ impl GlobalStyle {
                     &rendered_css,
                     "global_init",
                     &style,
-                    &html_root_class,
                     &selector,
                 );
             }
@@ -1670,33 +1645,6 @@ impl GlobalStyle {
         let revised_variant_hash = s.finish();
         let short_hash = short_uniq_id(revised_variant_hash);
 
-        let html_root_class = format!("seed-global-style-{} ", short_hash);
-
-        if let Some(html_root_elem) = document().get_elements_by_tag_name("html").item(0) {
-            if let Some(mut class_name) = html_root_elem.get_attribute("class") {
-                if let Some(existing_seed_style_position) = class_name.find("seed-global-style-") {
-                    if let Some(terminating_position) =
-                        class_name[existing_seed_style_position..].find(" ")
-                    {
-                        let final_term_pos =
-                            existing_seed_style_position + terminating_position + 1;
-                        class_name.replace_range(
-                            existing_seed_style_position..final_term_pos,
-                            &html_root_class,
-                        )
-                    } else {
-                        class_name.replace_range(existing_seed_style_position.., &html_root_class)
-                    }
-                } else {
-                    class_name.push_str(" ");
-                    class_name.push_str(&html_root_class);
-                }
-                let _ = html_root_elem.set_attribute("class", &format!("{}", &class_name));
-            } else {
-                let _ = html_root_elem.set_attribute("class", &format!(" {}", &html_root_class));
-            }
-        }
-
         let css_aleady_created =
             STYLES_USED.with(|css_set_ref| css_set_ref.borrow().contains(&revised_variant_hash));
 
@@ -1708,7 +1656,6 @@ impl GlobalStyle {
                     &rendered_css,
                     &short_hash,
                     &style,
-                    &html_root_class,
                     &selector,
                 );
                 STYLES_USED.with(|css_set_ref| {
