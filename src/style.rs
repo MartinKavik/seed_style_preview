@@ -1618,9 +1618,9 @@ impl GlobalStyle {
         Self::default()
     }
 
-    pub fn style(mut self, selector: &str, style: Style) -> GlobalStyle {
+    pub fn style(mut self, mut selector: &str, style: Style) -> GlobalStyle {
         if selector == "html" {
-            panic!("Sorry for now , You can only set html style directly in css.")
+            selector = ""
         }
 
         self.styles.push((selector.to_string(), style));

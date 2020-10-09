@@ -1546,7 +1546,7 @@ pub fn view_macro(_args: TokenStream, input: TokenStream) -> TokenStream {
 
                     vec![span![node_cow.to_string()]]
                 }
-                seed::virtual_dom::node::Node::Empty => {
+                seed::virtual_dom::node::Node::Empty | seed::virtual_dom::node::Node::NoChange => {
                     vec![]
                 }
             };
