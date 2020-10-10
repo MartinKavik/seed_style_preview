@@ -1378,6 +1378,14 @@ impl<Ms> LocalUpdateEl<El<Ms>> for &[Style] {
     }
 }
 
+impl<Ms> LocalUpdateEl<El<Ms>> for Option<Style> {
+    fn update_el(self, el: &mut El<Ms>) {
+        if let Some(style) = self {
+            style.update_el(el);
+        }
+    }
+}
+
 fn hash_64<T: AsRef<str> + Hash>(css: &str, locations: &[T]) -> u64 {
     let mut s = DefaultHasher::new();
     (css, locations).hash(&mut s);
