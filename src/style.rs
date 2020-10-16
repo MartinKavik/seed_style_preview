@@ -798,8 +798,10 @@ pub enum Pseudo {
     Empty,
     Enabled,
     FirstChild,
+    FirstLine,
     FirstOfType,
     Focus,
+    FocusWithin,
     Hover,
     InRange,
     Invalid,
@@ -816,6 +818,7 @@ pub enum Pseudo {
     OnlyChild,
     Optional,
     OutOfRange,
+    Placeholder,
     ReadOnly,
     ReadWrite,
     Required,
@@ -838,8 +841,10 @@ impl Pseudo {
             Pseudo::Empty => ":empty".to_string(),
             Pseudo::Enabled => ":enabled".to_string(),
             Pseudo::FirstChild => ":first-child".to_string(),
+            Pseudo::FirstLine => "::first-line".to_string(),
             Pseudo::FirstOfType => ":first-of-type".to_string(),
             Pseudo::Focus => ":focus".to_string(),
+            Pseudo::FocusWithin => ":focus-within".to_string(),
             Pseudo::Hover => ":hover".to_string(),
             Pseudo::InRange => ":in-range".to_string(),
             Pseudo::Invalid => ":invalid".to_string(),
@@ -850,6 +855,7 @@ impl Pseudo {
             Pseudo::OnlyChild => ":only-child".to_string(),
             Pseudo::Optional => ":optional".to_string(),
             Pseudo::OutOfRange => ":out-of-range".to_string(),
+            Pseudo::Placeholder => "::placeholder".to_string(),
             Pseudo::ReadOnly => ":read-only".to_string(),
             Pseudo::ReadWrite => ":read-write".to_string(),
             Pseudo::Required => ":required".to_string(),
@@ -1386,6 +1392,12 @@ impl<Ms> LocalUpdateEl<El<Ms>> for Option<Style> {
     }
 }
 
+impl<Ms> LocalUpdateEl<El<Ms>> for &Style {
+    fn update_el(self, el: &mut El<Ms>) {
+        self.to_owned().update_el(el);
+    }
+}
+
 fn hash_64<T: AsRef<str> + Hash>(css: &str, locations: &[T]) -> u64 {
     let mut s = DefaultHasher::new();
     (css, locations).hash(&mut s);
@@ -1618,7 +1630,7 @@ impl GlobalStyle {
         Self::default()
     }
 
-    pub fn style(mut self, mut selector: &str, style: Style) -> GlobalStyle {
+    pub fn style(mut self, selector: &str, style: Style) -> GlobalStyle {
         self.styles.push((selector.to_string(), style));
         self
     }

@@ -1951,7 +1951,7 @@ pub enum CssBorderBottomColor {
 #[derive(Display, Clone, Debug, CssStyleMacro)]
 #[display(fmt = "outline-color: {};")]
 pub enum CssOutlineColor {
-    #[display(fmt = "rgba({},{},{},{}", _0, _1, _2, _3)]
+    #[display(fmt = "rgba({},{},{},{})", _0, _1, _2, _3)]
     Rgba(f64, f64, f64, f64),
     #[display(fmt = "hsl({},{}%,{}%)", _0, _1, _2)]
     Hsl(f64, f64, f64),
